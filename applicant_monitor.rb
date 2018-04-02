@@ -2,10 +2,12 @@ require "active_record"
 require "csv"
 require "sqlite3"
 
-File.delete("monitor.csv")
-
+CSV_FILE_NAME="monitor.csv".freeze
 START_DATE_INPUT = ARGV.first
 END_DATE_INPUT = ARGV.last
+
+File.delete(CSV_FILE_NAME) if File.file?(CSV_FILE_NAME)
+
 
 ActiveRecord::Base.establish_connection(
   :adapter => "sqlite3",
@@ -34,7 +36,7 @@ class ApplicantMonitor
   end
 
   def write_csv
-    CSV.open("monitor.csv", "a+") do |csv|
+    CSV.open(CSV_FILE_NAME, "a+") do |csv|
       csv << ["count", "week", "workflow_state"]
 
       num_of_weeks.times do |week_int|
@@ -78,6 +80,13 @@ class ApplicantMonitor
   end
 end
 
+start = Time.now
+puts "Monitoring Applicants..."
+
 monitor = ApplicantMonitor.new(START_DATE_INPUT, END_DATE_INPUT)
 
 monitor.write_csv
+
+CSV.read(CSV_FILE_NAME).each { |row| p row.join(",") }
+
+puts Time.now - start
